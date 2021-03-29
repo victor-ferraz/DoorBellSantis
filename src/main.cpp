@@ -44,8 +44,8 @@ boolean programMode = false;
 //-------- Token de Autenticação -----------
 char auth[] = "aXWHebpfVegLti7DVZRNcAxjiAGILAwY";
 //-------- Configurações de Wi-Fi -----------
-char ssid[] = "Paulo";
-char pass[] = "bobmarley";
+char ssid[] = "";
+char pass[] = "";
 
 //-------- Pino Virtual -----------
 BLYNK_CONNECTED()
