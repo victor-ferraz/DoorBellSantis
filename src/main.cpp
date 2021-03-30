@@ -45,8 +45,8 @@ boolean programMode = false;
 //-------- Token de Autenticação -----------
 char auth[] = "aXWHebpfVegLti7DVZRNcAxjiAGILAwY";
 //-------- Configurações de Wi-Fi -----------
-char ssid[] = "Paulo";
-char pass[] = "bobmarley";
+char ssid[] = "";
+char pass[] = "";
 
 //-------- Pino Virtual -----------
 BLYNK_CONNECTED()
@@ -55,6 +55,59 @@ BLYNK_CONNECTED()
   Blynk.syncVirtual(V1);    // Sincroniza com o pino virtual V1
   Blynk.syncVirtual(V2);    // Sincroniza com o pino virtual V2
   Blynk.syncVirtual(V3);    // Sincroniza com o pino virtual V3
+}
+// in Blynk app writes values to the Virtual Pin 1
+// Botão: Acionar Portão
+BLYNK_WRITE(V1)
+{
+  uint8_t flag = param.asInt(); // assigning incoming value from pin V4 to a variable
+  if(flag){
+    Serial.println(F("DOOR output"));
+    Serial.println(F("-----------------------------"));
+    Blynk.virtualWrite(V0, "Acionando o portão...\n");
+    digitalWrite(DOOR, LOW);
+    delay(1000);
+    digitalWrite(DOOR, HIGH);
+    Blynk.virtualWrite(V0, "Portão acionado!\n");
+  }
+}
+// Botão: Adicionar tag RFID
+BLYNK_WRITE(V2)
+{
+  uint8_t flag = param.asInt(); // assigning incoming value from pin V4 to a variable
+  if(flag){
+    programMode = true;
+    Serial.println(F("Scan a PICC to ADD or REMOVE to EEPROM"));
+    Serial.println(F("Scan Master Card again to Exit Program Mode"));
+    Serial.println(F("-----------------------------"));
+    Blynk.virtualWrite(V0, "Apresente outro cartao para registra-lo ou cancele apresentando o cartao Master novamente.\n");
+  }
+}
+// Botão: Definir cartão Master
+BLYNK_WRITE(V3)
+{
+  uint8_t flag = param.asInt(); // assigning incoming value from pin V4 to a variable
+  if(flag){
+    Serial.println(F("Master Card removed"));
+    Serial.println(F("Scan a PICC to be the Master"));
+    Serial.println(F("-----------------------------"));
+    Blynk.virtualWrite(V0, "Apresente um cartao para registra-lo como cartao Master.\n");
+    deleteMaster();
+  }
+}
+// Botão: Apagar todos os registros
+BLYNK_WRITE(V4)
+{
+  uint8_t flag = param.asInt(); // assigning incoming value from pin V4 to a variable
+  if(flag){
+    Serial.println(F("Removing all cards..."));
+    Blynk.virtualWrite(V0, "Removendo todos os cartões registrados...\n");
+    EEPROM.write(0, 0x00);
+    EEPROM.commit();
+    Serial.println(F("All cards removed"));
+    Serial.println(F("-----------------------------"));
+    Blynk.virtualWrite(V0, "Todos os registros de cartões foram apagados.\n");
+  }
 }
 
 void check(){
@@ -163,6 +216,9 @@ void check(){
       if(findID(readCard)){ // card is stored
         Serial.println(F("Access granted!"));
         Blynk.virtualWrite(V0, "Acesso permitido\n");
+        digitalWrite(DOOR, LOW);
+        delay(1000);
+        digitalWrite(DOOR, HIGH);
       }else{ //card is not stored
         Serial.println(F("Access denied!"));
         Blynk.virtualWrite(V0, "Acesso negado\n");
