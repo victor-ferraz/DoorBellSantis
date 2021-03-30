@@ -25,6 +25,7 @@ void writeMaster(byte card[] ) {
     EEPROM.write(i, card[i-2]);   // Assign values read from EEPROM to array
   }
   EEPROM.write(1,0x55); // write the magic number
+  EEPROM.commit();
 }
 
 //////////////////////////////////////// Read master card ID from EEPROM //////////////////////////////
@@ -33,6 +34,7 @@ void deleteMaster() {
     EEPROM.write(i, 0x00);   // Assign values read from EEPROM to array
   }
   EEPROM.write(1,0x00); // delete the magic number
+  EEPROM.commit();
 }
 
 //////////////////////////////////////// Read an ID from EEPROM //////////////////////////////
@@ -68,12 +70,10 @@ uint8_t findIDSLOT( byte find[] ) {
 ///////////////////////////////////////// Find ID From EEPROM   ///////////////////////////////////
 bool findID( byte find[] ) {
   uint8_t count = EEPROM.read(0);     // Read the first Byte of EEPROM that
-  for ( uint8_t i = 1; i < count; i++ ) {    // Loop once for each EEPROM entry
+  for ( uint8_t i = 1; i <= count; i++ ) {    // Loop once for each EEPROM entry
     readID(i);          // Read an ID from EEPROM, it is stored in storedCard[4]
     if ( checkTwo( find, storedCard ) ) {   // Check to see if the storedCard read from EEPROM
       return true;
-    }
-    else {    // If not, return false
     }
   }
   return false;
@@ -90,6 +90,7 @@ void writeID( byte a[] ) {
       EEPROM.write( start + j, a[j] );  // Write the array values to EEPROM in the right position
     }
     // successWrite();
+    EEPROM.commit();
     Serial.println(F("Succesfully added ID record to EEPROM"));
     Blynk.virtualWrite(V0, "Cartao salvo!\n");
   }
@@ -125,6 +126,7 @@ void deleteID( byte a[] ) {
       EEPROM.write( start + j + k, 0);
     }
     // successDelete();
+    EEPROM.commit();
     Serial.println(F("Succesfully removed ID record from EEPROM"));
   }
 }

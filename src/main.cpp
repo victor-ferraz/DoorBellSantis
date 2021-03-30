@@ -1,5 +1,6 @@
 //-------- Bibliotecas -----------
 #define BLYNK_PRINT Serial // Blynk Serial Print
+#define EEPROM_SIZE 512
 #include <WiFi.h> // Wi-Fi
 #include <WiFiClient.h> // Wi-Fi client 
 #include "registros.h"
@@ -44,8 +45,8 @@ boolean programMode = false;
 //-------- Token de Autenticação -----------
 char auth[] = "aXWHebpfVegLti7DVZRNcAxjiAGILAwY";
 //-------- Configurações de Wi-Fi -----------
-char ssid[] = "";
-char pass[] = "";
+char ssid[] = "Paulo";
+char pass[] = "bobmarley";
 
 //-------- Pino Virtual -----------
 BLYNK_CONNECTED()
@@ -123,70 +124,62 @@ void check(){
     readMaster(); // read the master card stored
     // check if the read card is the master
     if (checkTwo(readCard, masterCard)){ // is Master
-      Serial.println("Hello Master!\n");
-      Blynk.virtualWrite(V0, "Cartao Master identificado\n");
       if(programMode == false){
-        Serial.println("Modo programacao\n");
+        Serial.println(F("Hello Master - Entered Program Mode"));
+        uint8_t count = EEPROM.read(0);   // Read the first Byte of EEPROM that
+        Serial.print(F("I have "));     // stores the number of ID's in EEPROM
+        Serial.print(count);
+        Serial.print(F(" record(s) on EEPROM"));
+        Serial.println("");
+        Serial.println(F("Scan a PICC to ADD or REMOVE to EEPROM"));
+        Serial.println(F("Scan Master Card again to Exit Program Mode"));
+        Serial.println(F("-----------------------------"));
         Blynk.virtualWrite(V0, "Apresente outro cartao para registra-lo ou cancele apresentando o cartao Master novamente.\n");
         programMode = true;
       }else{
-        Serial.println("Modo programação cancelado\n");
-        Blynk.virtualWrite(V0, "Cancelado\n");
+        Serial.println(F("Exiting Program Mode"));
+        Serial.println(F("-----------------------------"));
+        Blynk.virtualWrite(V0, "Modo Programação Cancelado\n");
         programMode = false;
       }
 
     }else if(programMode == true){
-      Serial.println("salvar cartão");
-      Blynk.virtualWrite(V0, "Salvando cartão...\n");
-      writeID(readCard);
+      if(findID(readCard)){ // card is already stored
+        Serial.println(F("I know this PICC, removing..."));
+        Blynk.virtualWrite(V0, "Removendo cartão... ");
+        deleteID(readCard);
+        Blynk.virtualWrite(V0, "OK\n");
+        programMode = false;
+      }else{
+        Serial.println(F("I do not know this PICC, adding..."));
+        Blynk.virtualWrite(V0, "Salvando cartão... ");
+        writeID(readCard);
+        Blynk.virtualWrite(V0, "OK\n");
+        programMode = false;
+      }
       
     }else{
-      Serial.println("Verificar registro");
+      Serial.println(F("-----------------------------"));
       if(findID(readCard)){ // card is stored
-        Serial.println("Acesso permitido");
+        Serial.println(F("Access granted!"));
+        Blynk.virtualWrite(V0, "Acesso permitido\n");
       }else{ //card is not stored
-        Serial.println("Acesso negado");
+        Serial.println(F("Access denied!"));
+        Blynk.virtualWrite(V0, "Acesso negado\n");
       }
     }
   }
   else{
-    Serial.println("There is no Master card stored.");
-    Serial.println("Writing this card as Master!");
+    Serial.println(F("-----------------------------"));
+    Serial.println(F("There is no Master card stored."));
+    Serial.println(F("Writing this card as Master!"));
+    Serial.println(F("-----------------------------"));
+    Blynk.virtualWrite(V0, "Não tem cartão Master registrado\n");
+    Blynk.virtualWrite(V0, "Salvando este cartão como Master\n");
     writeMaster(readCard);
-    Serial.println("Master card stored.");
+    Serial.println(F("Master card stored."));
+    Blynk.virtualWrite(V0, "Cartão Master registrado\n");
   } 
-
-  // defining cards here
-/*  if( (content.substring(1) == "36 8B 9E AC") ) //change the UID of the card/cards that you want to give access
-  {
-    Serial.println(MSG_ACCESS_OK);
-    lcd.print(MSG_ACCESS_OK);
-    Blynk.virtualWrite(V0, "UID tag: ");
-    Blynk.virtualWrite(V0, content.substring(1));
-    Blynk.virtualWrite(V0, "\nAcesso permitido\n");
-    Serial.println();
-    delay(500);
-    digitalWrite(DOOR, LOW);
-//    tone(BUZZER, 500);
-    delay(1000);
-//    noTone(BUZZER);
-//    delay(3000);
-    digitalWrite(DOOR, HIGH);
-  }
- else{
-    Serial.println("Unregistered user");
-    lcd.print(MSG_ACCESS_DENIED);
-    Blynk.virtualWrite(V0, "Usuario nao registrado tentou acessar\n");
-    Blynk.virtualWrite(V0, "UID tag: ");
-    Blynk.virtualWrite(V0, content.substring(1));
-    Blynk.virtualWrite(V0, "\nAcesso negado\n");
-    Serial.println(" Access denied");
-//    digitalWrite(LED_R, HIGH);
-//    tone(BUZZER, 300);
-//    delay(1500);
-//    digitalWrite(LED_R, LOW);
-//    noTone(BUZZER);
-  }*/
 }
 
 void setup()
@@ -212,7 +205,9 @@ void setup()
   digitalWrite(DOOR, HIGH);
 
   // EEPROM Init
-  EEPROM.begin(512);
+  EEPROM.begin(EEPROM_SIZE);
+  // EEPROM.write(0,0x00); // I use for reset the number of stored cards
+  // EEPROM.commit();
 
   SPI.begin();      // Init SPI bus
   // RFID Init
