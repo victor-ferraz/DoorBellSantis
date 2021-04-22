@@ -8,6 +8,7 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <EEPROM.h>
+#include <waves.h>
 #include <BlynkSimpleEsp32.h> // Blynk-ESP32
 BlynkTimer timer;
 
@@ -33,10 +34,10 @@ LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 #define MSG_MAIN_1  "Escolha uma Casa"
 #define MSG_MAIN_2  "e aperte o botao"
 #define MSG_BUTTON_PRESSED   "Chamando..."
-#define MSG_BUTTON_1_PRESSED "PAULO"
-#define MSG_BUTTON_2_PRESSED "MILZA"
-#define MSG_BUTTON_3_PRESSED "GATA"
-#define MSG_BUTTON_4_PRESSED "PEDRO"
+#define MSG_BUTTON_1_PRESSED "PAULO  Aguarde-o"
+#define MSG_BUTTON_2_PRESSED "MILZA  Aguarde-a"
+#define MSG_BUTTON_3_PRESSED "GATA   Aguarde-a"
+#define MSG_BUTTON_4_PRESSED "PEDRO  Aguarde-o"
 #define MSG_DOOR_REMOTE_1    "Portao Acionado"
 #define MSG_DOOR_REMOTE_2    "remotamente..."
 #define MSG_ACCESS_OK_1      "Acesso permitido"
@@ -93,6 +94,7 @@ BLYNK_WRITE(V1)
     Serial.println(F("DOOR output"));
     Serial.println(F("-----------------------------"));
     Blynk.virtualWrite(V0, "Acionando o portão...\n");
+    play(0, 1000); // beep, choose type and cycles
     lcd.clear();
     lcd.print(MSG_DOOR_REMOTE_1);
     lcd.setCursor(0,1);
@@ -174,6 +176,15 @@ void check(){
     delay(500);
     digitalWrite(BELL_1, 0);
     Blynk.notify("Alguem chamando Paulinho no portao!"); 
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
     delay(5000);
     lcd_msg_main();
   }
@@ -187,6 +198,15 @@ void check(){
     delay(500);
     digitalWrite(BELL_2, 0);
     Blynk.notify("Alguem chamando Milza no portao!");
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles    
     delay(5000);
     lcd_msg_main();
  }
@@ -200,6 +220,15 @@ void check(){
     delay(500);
     digitalWrite(BELL_3, 0);
     Blynk.notify("Alguem chamando Gata no portao!"); 
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles    
     delay(5000);
     lcd_msg_main();    
  }
@@ -213,6 +242,15 @@ void check(){
     delay(500);
     digitalWrite(BELL_4, 0);
     Blynk.notify("Alguem chamando Pedro no portao!"); 
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles
+    delay(50);
+    play(0, 200); // beep, choose type and cycles    
     delay(5000);
     lcd_msg_main();    
  }
@@ -227,7 +265,8 @@ void check(){
   {
     return;
   }
-  
+  play(0, 100); // beep, choose type and cycles
+
   //Show UID on serial monitor
   Serial.print("UID tag :");
   String content= "";
@@ -323,6 +362,7 @@ void check(){
       }else{ //card is not stored
         lcd.clear();
         lcd.print(MSG_ACCESS_DENIED);
+        play(0, 300); // beep, choose type and cycles
         Serial.println(F("Access denied!"));
         Blynk.virtualWrite(V0, "Acesso negado\n");
         delay(2000);
